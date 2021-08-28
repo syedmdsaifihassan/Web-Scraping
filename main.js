@@ -4,7 +4,8 @@ let path = require('path');
 // npm i request
 let request = require('request');
 let cheerio = require('cheerio');
-const { clear } = require('console');
+let xlsx = require('xlsx');
+// const { clear } = require('console');
 
 // IPL folder
 let mainPath = process.cwd();
@@ -158,18 +159,23 @@ function teamDetails(html) {
 
         // console.log(playerObj);
 
-        let playerPath = path.join(teamPath1, playerName+'.json');
-        if(fs.existsSync(playerPath)) {
-            let contentArr = JSON.parse(fs.readFileSync(playerPath));
-            contentArr.push(playerObj);
-            let JSONString = JSON.stringify(contentArr);
-            fs.writeFileSync(playerPath, JSONString);
+        let playerPath = path.join(teamPath1, playerName+'.xlsx');
+        let playerArray = [];
+        if(fs.existsSync(playerPath)==false) {
+            // let contentArr = JSON.parse(fs.readFileSync(playerPath));
+            // contentArr.push(playerObj);
+            // let JSONString = JSON.stringify(contentArr);
+            // fs.writeFileSync(playerPath, JSONString);
+            playerArray.push(playerObj);
         }else{
-            let array = [];
-            array.push(playerObj);
-            let JSONString = JSON.stringify(array);
-            fs.writeFileSync(playerPath, JSONString);
+            // let array = [];
+            // array.push(playerObj);
+            // let JSONString = JSON.stringify(array);
+            // fs.writeFileSync(playerPath, JSONString);
+            playerArray = excelReader(playerPath, playerName);
+            playerArray.push(playerObj);
         }
+        excelWriter(playerPath, playerArray, playerName);
     }
     // console.log("--------------"+team2+"--------------")
     for(let i=0; i<playerDetails2.length-1; i+=2) {
@@ -197,19 +203,48 @@ function teamDetails(html) {
 
         // console.log(playerObj);
 
-        let playerPath = path.join(teamPath2, playerName+'.json');
-        if(fs.existsSync(playerPath)) {
-            let contentArr = JSON.parse(fs.readFileSync(playerPath));
-            contentArr.push(playerObj);
-            let JSONString = JSON.stringify(contentArr);
-            fs.writeFileSync(playerPath, JSONString);
+        let playerPath = path.join(teamPath2, playerName+'.xlsx');
+        let playerArray = [];
+        if(fs.existsSync(playerPath)==false) {
+            // let contentArr = JSON.parse(fs.readFileSync(playerPath));
+            // contentArr.push(playerObj);
+            // let JSONString = JSON.stringify(contentArr);
+            // fs.writeFileSync(playerPath, JSONString);
+            playerArray.push(playerObj);
         }else{
-            let array = [];
-            array.push(playerObj);
-            let JSONString = JSON.stringify(array);
-            fs.writeFileSync(playerPath, JSONString);
+            // let array = [];
+            // array.push(playerObj);
+            // let JSONString = JSON.stringify(array);
+            // fs.writeFileSync(playerPath, JSONString);
+            playerArray = excelReader(playerPath, playerName);
+            playerArray.push(playerObj);
         }
+        excelWriter(playerPath, playerArray, playerName);
     }
 }
 
 // console.log("After");
+
+function excelWriter(filePath, json, sheetName) {
+    // workbook create
+    let newWB = xlsx.utils.book_new();
+    // worksheet
+    let newWS = xlsx.utils.json_to_sheet(json);
+    xlsx.utils.book_append_sheet(newWB, newWS, sheetName);
+    // excel file create 
+    xlsx.writeFile(newWB, filePath);
+}
+// // json data -> excel format convert
+// // -> newwb , ws , sheet name
+// // filePath
+// read 
+//  workbook get
+function excelReader(filePath, sheetName) {
+    // player workbook
+    let wb = xlsx.readFile(filePath);
+    // get data from a particular sheet in that wb
+    let excelData = wb.Sheets[sheetName];
+    // sheet to json 
+    let ans = xlsx.utils.sheet_to_json(excelData);
+    return ans;
+}
